@@ -13,12 +13,10 @@ app.get("/", (req, res) => {
   res.send("Backend working ✅");
 });
 
-// 🔥 REAL AI ROUTE
+// AI ROUTE
 app.post("/generate", async (req, res) => {
   try {
     const { input } = req.body;
-
-    console.log("Request received:", input);
 
     const response = await fetch("https://api.openai.com/v1/responses", {
       method: "POST",
@@ -32,7 +30,6 @@ app.post("/generate", async (req, res) => {
       })
     });
 
-    // 🔴 Check error
     if (!response.ok) {
       const err = await response.text();
       console.log("API ERROR:", err);
@@ -41,12 +38,14 @@ app.post("/generate", async (req, res) => {
 
     const data = await response.json();
 
-    console.log("FULL RESPONSE:", JSON.stringify(data, null, 2));
-
     let text = "No result";
 
     if (data.output && data.output.length > 0) {
-      text = data.output[0].content[0].text;
+      const content = data.output[0].content;
+
+      if (content && content.length > 0) {
+        text = content.map(c => c.text || "").join("");
+      }
     }
 
     res.json({ result: text });
@@ -57,6 +56,9 @@ app.post("/generate", async (req, res) => {
   }
 });
 
-app.listen(5000, () => {
-  console.log("Server running on http://127.0.0.1:5000");
+// 🔥 FIXED PORT
+const PORT = process.env.PORT || 5000;
+
+app.listen(PORT, "0.0.0.0", () => {
+  console.log("Server running on port " + PORT);
 });
